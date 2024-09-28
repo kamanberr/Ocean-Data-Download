@@ -1,4 +1,8 @@
 # MATLAB Script for download HYCOM GOFS 3.1 outputs
+In order to use this code, the '**Statistics and Machine Learning Toolbox**' must be installed in MATLAB. 
+
+You can download the toolbox from MATLAB by navigating to 'Home > Add-Ons' in the toolbar at the top of the program
+
 1. You can download HYCOM GOFS 3.1 outputs with this code.
 2. You can **set the Period, Area, Depth, temporal resolution** of the data. 
 3. Note that, sometimes running may "shut down" with error messages due to HYCOM server problems.   
@@ -21,6 +25,10 @@ HYCOM GOFS 3.1 Renalysis :  https://www.hycom.org/dataserver/gofs-3pt1/reanalysi
 ---
 
 # (Korean) HYCOM 3.1 산출물을 다운받을 수 있는 MATLAB 코드
+본 코드를 이용하기 위해서는 MATLAB에서 “**Statistics and Machine Learning Toolbox**”가 다운로드되어 있어야 합니다. 
+
+Toolbox 다운로드는 MATLAB 프로그램 상단의 툴바에서 “홈>애드온 받기” 로 가능합니다.
+
 1. 본 코드를 이용하여 HYCOM 3.1 산출물을 다운받을 수 있습니다.
 2. 본 코드에서는 **원하는 기간, 시간 해상도, 지역 범위, 수심**을 선택할 수 있습니다. 
 3. 참고하실 점은, HYCOM 서버 자체의 문제로 인하여 다운로드 받는 과정이 중단될 수 있습니다.   
