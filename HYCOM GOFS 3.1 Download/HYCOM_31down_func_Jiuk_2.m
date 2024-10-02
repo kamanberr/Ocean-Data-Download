@@ -288,8 +288,15 @@ ads_f5 = sprintf('%s%s', ads1, ads5);
 all_la = downloadretry(ads_f5, 'lat');        all_lo = downloadretry(ads_f5, 'lon');
 
 
-id_la = knnsearch(all_la, [Spatial_area(1); Spatial_area(2)]); id_la = id_la -1;
-id_lo = knnsearch(all_lo, [Spatial_area(3); Spatial_area(4)]); id_lo = id_lo -1;
+% id_la = knnsearch(all_la, [Spatial_area(1); Spatial_area(2)]); id_la = id_la -1;
+% id_lo = knnsearch(all_lo, [Spatial_area(3); Spatial_area(4)]); id_lo = id_lo -1;
+
+id_la(1) = findnearpoint(all_la, Spatial_area(1)); 
+id_la(2) = findnearpoint(all_la, Spatial_area(2)); 
+id_la = id_la -1;
+id_lo(1) = findnearpoint(all_lo, Spatial_area(3)); 
+id_lo(2) = findnearpoint(all_lo, Spatial_area(4)); 
+id_lo = id_lo -1;
 
 fprintf('LAT & LON data Ready... Please Wait.\n')
 
@@ -299,9 +306,18 @@ ads_f3 = sprintf('%s%s', ads1, ads3);
 all_dep = downloadretry(ads_f3, 'depth');
 
 
-id_dep = knnsearch(all_dep, Depth_range); id_dep = id_dep -1;
+% id_dep = knnsearch(all_dep, Depth_range); 
+id_dep(1) = findnearpoint(all_dep, Depth_range(1)); 
+id_dep(2) = findnearpoint(all_dep, Depth_range(2)); 
+id_dep = id_dep -1;
 
 fprintf('DEPTH data Ready... Please Wait.\n')
+
+function id = findnearpoint(base, target)
+% find nearest point of "target" from "base"
+[~, id] = min(abs(base-target)); 
+end
+% ---------------------------------------------------
 
 end
 
@@ -382,7 +398,6 @@ while true % If the downloading process is interrupted, then retry downloading a
     % Wait and run again
     disp('Process Retry... Please wait');    pause(15);    
 end
-
 
 end
 
