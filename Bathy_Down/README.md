@@ -4,15 +4,25 @@ This script can offer Bathymetry data from various sources.
 
 &rarr; **ETOPO 2022 30arc, 60arc, SRTM 15+, ETOPO 1, ETOPO 2, ETOPO 5, and GEBCO 2019**
 
-The bathymetry data acquired from different sources could be vary in terms of resolution and accuracy. 
+The bathymetry data acquired from different sources could vary in resolution and accuracy. 
 When utilizing such data in research, it is essential to carefully evaluate and select the dataset most suitable for the specific area of interest.
 
 The following notes are provided regarding the use of this script:
 
 1. For ETOPO 1 data, it has been raised that the `.mat` file format may contain broken data in certain cases. 
-However, data downloaded the same area with `.nc` format has no issue.
+However, data downloaded in the same area with the `.nc` format has no issue.
 2. For GEBCO, this script provides the 2019 version. 
 For the most up-to-date version, it is recommended to download the dataset directly from the official GEBCO website.
+3. There is an issue with ETOPO 2. I found two sources of ETOPO 2 that show different data.
+
+   [ERDDAP used in this script](https://apdrc.soest.hawaii.edu/erddap/griddap/hawaii_soest_bc8b_7e44_d573.html)
+
+   [ETOPO2v2](https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2/ETOPO2v2-2006/ETOPO2v2g/netCDF/)
+   
+   It seems the first one is a more accurate thing.
+   But still, I couldn't find why there were two different data sets with the same name.
+
+   Conclusion) I do not recommend using ETOPO 1, 2, 5.
 
 The below figures are examples of bathymetry using the data from this script.
 
