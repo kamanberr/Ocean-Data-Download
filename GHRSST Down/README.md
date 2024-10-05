@@ -10,3 +10,4 @@ Target data : OSITA v2, OSTIA Reprocessed, MUR 4.1, MUR 4.2 and OISST v2
 
    [CMEMS](https://data.marine.copernicus.eu/product/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/description)
    
+4. The PDF file "Manual_for_download_data_from_PODAAC_using_MATLAB_(with_specific_Area_and_Period)" is the way that how I wrote the MATLAB script for downloading data from PODAAC. If you want more data from PODAAC, you could write a new MATLAB script using the manual.
