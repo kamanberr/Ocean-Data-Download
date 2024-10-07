@@ -1,5 +1,11 @@
 # GHRSST data download with MATLAB
 
+How to use this code?
+1. Set the small area and just one day to prepare.
+2. After running the code, you see the white internet window with "Log in."
+3. You should "Log in" for "[NASA Earthdata](https://www.earthdata.nasa.gov/)" for the first time. 
+4. After "Log in", you set the area and period you want. And just run!
+
 Target data : OSITA v2, OSTIA Reprocessed, MUR 4.1, MUR 4.2 and OISST v2
 
 1. The sources of OSTIA and MUR are [PO.DAAC Homepage](https://podaac.jpl.nasa.gov/cloud-datasets).
