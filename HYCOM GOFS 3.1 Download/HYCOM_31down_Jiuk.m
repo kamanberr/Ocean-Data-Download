@@ -6,6 +6,7 @@
 %   [2024.09.10] Modified   by Yunji Noh 
 %   [2024.09.19] Modified   by Jiuk Hwang
 %   [2024.09.23] Modified   by Jiuk Hwang
+%   [2024.10.02] Modified   by Jiuk Hwang
 %
 % WARNING =================================================================
 % 1. Analysis and Reanalysis have different periods of data.
@@ -36,31 +37,31 @@ clc; clear; close all;
 tic % start to count time 
 
 % Starting time (YY,MM,DD,hh,mm,ss) and Ending time (YY,MM,DD,hh,mm,ss)
-Period = [2019, 01, 01, 00, 00, 00 ; 2019, 12, 31, 21, 00, 00];
+Period = [2013, 01, 01, 00, 00, 00 ; 2013, 12, 31, 23, 00, 00];
 
 % Time Step : e.g. 3 or 12 hours
 timestep = 3;
 
 % 'Analysis' or 'Reanalysis' (Be careful with the date range!)
-HYC_ver = 'Analysis';
+HYC_ver = 'Reanalysis';
 
 % [lat start, lat end, lon start, lon end]
-Spatial_area = [33, 54, 127, 143];
+Spatial_area = [17, 20, 55, 76];
 
 % [shallow depth ; deep depth]  - unit : meters
-Depth_range = [0 ; 3800];
+Depth_range = [0 ; 5500];
 
 % select from {'temp', 'sal', 'ssh', 'u', 'v'};
-VariableData = {'temp', 'sal', 'ssh', 'u', 'v'};
+VariableData = {'temp', 'sal'};
 
 % you will save data in this file path below.
 HomeFolderNm = "D:\MATLAB_JU\RawData\";
-RawDataFolderNm = "HYC_JIUK_ES";
+RawDataFolderNm = "HYC_request_test";
 
 % mat files will be save with this name below.
 % DO NOT USE UNDERBAR("_") IN "MatFileNm" 
 % → e.g) "hyc_hello" → Don't use "_" !!!
-MatFileNm = "hycES"; % you will save data with this file name
+MatFileNm = "hyc"; % you will save data with this file name
 
 % function execution
 HYCOM_31down_func_Jiuk_2(Period, timestep, Spatial_area, Depth_range, ...
