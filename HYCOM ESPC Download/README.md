@@ -30,7 +30,7 @@ https://kr.mathworks.com/matlabcentral/fileexchange/173220-hycom-download-hycom-
 
 ---
 
-# (Korean) HYCOM 3.1 산출물을 다운받을 수 있는 MATLAB 코드
+# (Korean) HYCOM ESPC-D-V02 산출물을 다운받을 수 있는 MATLAB 코드
 
 1. 본 코드를 이용하여 HYCOM ESPC-D-V02 산출물을 다운받을 수 있습니다.
 2. 본 코드에서는 **원하는 기간, 시간 해상도, 지역 범위, 수심**을 선택할 수 있습니다. 
