@@ -5,9 +5,9 @@
 3. Note that, sometimes running may "shut down" with error messages due to HYCOM server problems.   
 However, **code would be automatically reruned**. So there is no problem. 
 4. There may be cases that the download process have been interrupted, and user manually restart the code.   
-In such cases, if the download folder path is the same as before, the new download process will **exclude any previously downloaded MAT files**.
-5. The downloaded file format is **"MAT" files with "Structure (Struct)"** data type. 
-6. MAT files will be saved in separate folders categorized by year.
+In such cases, if the download folder path is the same as before, the new download process will **exclude any previously downloaded files**.
+5. The available file formats are "MAT" or "NC" format.
+6. MAT or NC files will be saved in separate folders categorized by year.
 
 If you have any questions or suggestions, please contact me at the following email addres.
 
@@ -29,9 +29,9 @@ HYCOM GOFS 3.1 Renalysis :  https://www.hycom.org/dataserver/gofs-3pt1/reanalysi
 그렇지만, 코드는 **자동으로 재실행**되어 다운로드를 다시 시도하도록 작성되었습니다.   
 따라서 서버 문제로 인하여 코드 실행 과정에서 에러 메시지가 나타나더라도, 걱정하실 필요는 없습니다.
 4. 다운로드 과정이 중단되어 사용자가 코드를 수동으로 재실행해야 하는 경우가 있을 수 있습니다.   
-이러한 경우에 다운로드 폴더 경로가 이전과 동일하다면, 새로운 다운로드 과정에서는 **이미 다운로드된 MAT 파일들을 제외**하고 진행됩니다.
-5. 다운로드된 자료는 **MAT 파일** 형식으로, 데이터 타입은 **구조체**의 성격을 가집니다.
-6. 다운로드된 MAT 파일들은 연도별 폴더에 분류되어 저장됩니다. 
+이러한 경우에 다운로드 폴더 경로가 이전과 동일하다면, 새로운 다운로드 과정에서는 기존에 다운로드된 파일들을 제외하고 진행됩니다.
+5. 자료는 MAT 혹은 NC 파일 포맷으로 다운로드가 가능합니다.
+6. 다운로드된 파일들은 연도별 폴더에 분류되어 저장됩니다. 
 
 만약 질문이나 제안이 있다면, 아래의 메일로 연락주세요. 
 
