@@ -1,4 +1,5 @@
-function HYCOM_GOFS31_Func_standard_Jiuk_3(Period, timestep, Spatial_area, lat_step, lon_step, Depth_range, VariableData, HomeFolderNm, RawDataFolderNm, MatFileNm, HYC_ver)
+function HYCOM_GOFS31_Func_standard_Jiuk_3(Period, timestep, Spatial_area, lat_step, lon_step, ...
+    Depth_range, VariableData, HomeFolderNm, RawDataFolderNm, FileName, FileFormat, HYC_ver)
 %   Written by Jiuk Hwang
 %   Log
 %       HYCOM_31down_func_Jiuk.m
@@ -19,6 +20,8 @@ function HYCOM_GOFS31_Func_standard_Jiuk_3(Period, timestep, Spatial_area, lat_s
 %       HYCOM_GOFS31_Func_standard_Jiuk_3.m
 %       2025.04.20 Update (1)
 %                   1. now you can change the interval of lon, lat grid 
+%       2025.12.09 Update (1)
+%                   1. now you can download file as NC format
 % =========================================================================
 
 %% Preprocessing
@@ -143,10 +146,10 @@ if strcmp(HYC_ver, 'Analysis')
                     % check the existence of FOLDER
                     if exist(ckfpath, 'dir')
                         clear fn ifn fn2 fndate ifndate id_id_tm;
-                        fn = dir(sprintf('%s%s', ckfpath, '*.mat'));
+                        fn = dir(sprintf('%s*.%s', ckfpath, FileFormat));
                         if height(fn) ~= 0
                             for ifn = 1:height(fn)
-                                fn2 = split([fn(ifn).name], ["_", ".mat"]);
+                                fn2 = split([fn(ifn).name], ["_", sprintf('.%s', FileFormat)]);
                                 fprintf('%s already exist \n', [fn(ifn).name])
                                 fn3(1) = double(string(fn2{2,:}));
                                 fn3(2) = double(string(fn2{3,:}));
@@ -177,10 +180,23 @@ if strcmp(HYC_ver, 'Analysis')
                         if ~exist(fpath, 'dir')
                             mkdir(fpath);
                         end
-                        matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.mat', MatFileNm, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
-                        fpath2 = sprintf('%s%s', fpath, matnm);
-                        save(fpath2, "hyc")
-                        fprintf('Download %s\n', matnm);
+
+                        if strcmp(FileFormat, 'mat') || strcmp(FileFormat, 'Mat') || strcmp(FileFormat, 'MAT')
+                            % Save as Mat file
+                            matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.mat', ...
+                                FileName, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
+                            fpath2 = sprintf('%s%s', fpath, matnm);
+                            save(fpath2, "hyc", "-v7.3")
+                        end
+
+                        if strcmp(FileFormat, 'nc') || strcmp(FileFormat, 'NC') || strcmp(FileFormat, 'Nc')
+                            % Save as NC file
+                            matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.nc', ...
+                                FileName, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
+                            coord_priority = ["lon", "lat", "dep"];
+                            fpath2 = sprintf('%s%s', fpath, matnm);
+                            func_struct2nc_hycom(hyc, fpath2, coord_priority);
+                        end
                     end
                 end
                 % =========================================================
@@ -205,10 +221,10 @@ elseif strcmp(HYC_ver, 'Reanalysis')
             % check the existence of FOLDER
             if exist(ckfpath, 'dir')
                 clear fn ifn fn2 fndate ifndate id_id_tm;
-                fn = dir(sprintf('%s%s', ckfpath, '*.mat'));
+                fn = dir(sprintf('%s*.%s', ckfpath, FileFormat));
                 if height(fn) ~= 0
                     for ifn = 1:height(fn)
-                        fn2 = split([fn(ifn).name], ["_", ".mat"]);
+                        fn2 = split([fn(ifn).name], ["_", sprintf('.%s', FileFormat)]);
                         fprintf('%s already exist \n', [fn(ifn).name])
                         fn3(1) = double(string(fn2{2,:}));
                         fn3(2) = double(string(fn2{3,:}));
@@ -238,9 +254,24 @@ elseif strcmp(HYC_ver, 'Reanalysis')
                 if ~exist(fpath, 'dir')
                     mkdir(fpath);
                 end
-                matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.mat', MatFileNm, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
-                fpath2 = sprintf('%s%s', fpath, matnm);
-                save(fpath2, "hyc")
+
+                if strcmp(FileFormat, 'mat') || strcmp(FileFormat, 'Mat') || strcmp(FileFormat, 'MAT')
+                    % Save as Mat file
+                    matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.mat', ...
+                        FileName, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
+                    fpath2 = sprintf('%s%s', fpath, matnm);
+                    save(fpath2, "hyc", "-v7.3")
+                end
+
+                if strcmp(FileFormat, 'nc') || strcmp(FileFormat, 'NC') || strcmp(FileFormat, 'Nc')
+                    % Save as NC file
+                    matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.nc', ...
+                        FileName, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
+                    coord_priority = ["lon", "lat", "dep"];
+                    fpath2 = sprintf('%s%s', fpath, matnm);
+                    func_struct2nc_hycom(hyc, fpath2, coord_priority);
+                end
+
                 fprintf('Download %s\n', matnm);
             end
         end

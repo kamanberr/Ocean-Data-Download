@@ -8,6 +8,7 @@
 %   [2024.09.23] Modified   by Jiuk Hwang
 %   [2024.10.02] Modified   by Jiuk Hwang
 %   [2025.04.20] Updated    by Jiuk Hwang
+%   [2025.12.09] Updated    by Jiuk Hwang
 %
 % WARNING =================================================================
 % 1. Analysis and Reanalysis have different periods of data.
@@ -38,17 +39,19 @@ clc; clear; close all;
 tic % start to count time 
 
 % Starting time (YY,MM,DD,hh,mm,ss) and Ending time (YY,MM,DD,hh,mm,ss) ===
-Period = [2023, 07, 20, 00, 00, 00 ; 2023, 07, 31, 23, 00, 00];
+% Period = [1994, 01, 01, 12, 00, 00 ; 1994, 12, 31, 23, 00, 00]; % <<<<<<<<<<<<<<<<<<< Change this period
+Period = [1994, 01, 01, 12, 00, 00 ; 2015, 12, 31, 09, 00, 00];
 
 % Time Step : e.g. 3*N hours (N is integer) ===============================
 timestep = 3; % default is 3 hours
 
 % 'Analysis' or 'Reanalysis' (Be careful with the date range!) ============
-HYC_ver = 'Analysis';
+% HYC_ver = 'Analysis';   % Period : 2015-2024.08
+HYC_ver = 'Reanalysis';  % Period : 1994-2015
 
 % [lat start, lat end, lon start, lon end] ================================
-% [S, N, W, E] - unit: -80 to 90 (N), 0 to 360 (E)
-Spatial_area = [34, 35, 124, 125];
+% [S, N, W, E] - unit: -80 to 90 (N), -180 to 180 (E)
+Spatial_area = [-10, 90, 100, 180];
 
 % If you want "coarse" resolution, change the step of lon & lat grid. =====
 % Note that, Units of 'lat_step' and 'lon_step' are not "km", 
@@ -60,22 +63,26 @@ lon_step = 1; % default is 1 grid step.
 % with Vertical Levels ( depth ) : 0 2 4 6 8 10 12 15 20 25 30 35 40 45 50 
 %           60 70 80 90 100 125 150 200 250 300 350 400 500 600 700 800 900 
 %           1000 1250 1500 2000 2500 3000 4000 5000 (meters)
-Depth_range = [0 ; 500];
+Depth_range = [0 ; 5000];
 
 % select from {'temp', 'sal', 'ssh', 'u', 'v'};  ==========================
 VariableData = {'temp', 'sal', 'ssh', 'u', 'v'};
 
 % you will save data in this file path below.  ============================
-HomeFolderNm = "D:\MATLAB_JU\RawData\";
-RawDataFolderNm = "HYC_test";
+HomeFolderNm = "Y:\\HYCOM_NP\\";
+RawDataFolderNm = "HYC_NWP";
 
-% mat files will be save with this name below. ============================
+% Final files will be save with this name below. ==========================
 % DO NOT USE UNDERBAR("_") IN "MatFileNm" 
 % → e.g) "hyc_hello" → Don't use "_" !!!
-MatFileNm = "hyc"; % you will save data with this file name
+FileName = "hyc"; % you will save data with this file name
+
+% File Format 
+%   "mat" or "nc"
+FileFormat = "nc";
 
 % function execution  =====================================================
-HYCOM_GOFS31_Func_standard_Jiuk_3(Period, timestep, Spatial_area, lat_step, lon_step, Depth_range, ...
-    VariableData, HomeFolderNm, RawDataFolderNm, MatFileNm, HYC_ver)
+HYCOM_GOFS31_Func_standard_Jiuk_3(Period, timestep, Spatial_area, lat_step, lon_step, ...
+    Depth_range, VariableData, HomeFolderNm, RawDataFolderNm, FileName, FileFormat, HYC_ver)
 
 toc % display download time

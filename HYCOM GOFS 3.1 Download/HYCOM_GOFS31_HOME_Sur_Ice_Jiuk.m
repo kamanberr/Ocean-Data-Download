@@ -46,7 +46,7 @@ VariableData = {"qtot", "emp", "steric_ssh", "ssh", "u_bt", "v_bt", "sblt", "mld
 timestep = 3; % default is 1 hour
 
 % Starting time (YY,MM,DD,hh,mm,ss) and Ending time (YY,MM,DD,hh,mm,ss) ===
-Period = [2019, 12, 31, 21, 00, 00 ; 2020, 01, 2, 03, 00, 00];
+Period = [2019, 1, 1, 00, 00, 00 ; 2019, 01, 1, 21, 00, 00];
 
 % [lat start, lat end, lon start, lon end] ================================
 % [S, N, W, E] - unit: -80 to 90 (N), 0 to 360 (E)
@@ -59,16 +59,20 @@ lat_step = 1; % default is 1 grid step.
 lon_step = 1; % default is 1 grid step.
 
 % you will save data in this file path below.  ============================
-HomeFolderNm = "D:\MATLAB_JU\RawData\";
+HomeFolderNm = "Y:\\HYCOM_NP\\";
 RawDataFolderNm = "HYC_Sur_test";
 
 % mat files will be save with this name below. ============================
 % DO NOT USE UNDERBAR("_") IN "MatFileNm"
 % → e.g) "hyc_hello" → Don't use "_" !!!
-MatFileNm = "HycSur"; % you will save data with this file name
+FileName = "HycSur"; % you will save data with this file name
+
+% File Format 
+%   "mat" or "nc"
+FileFormat = "nc";
 
 HYCOM_GOFS31_Func_Sur_Jiuk(Period, timestep, Spatial_area, lat_step, lon_step, ...
-    VariableData, HomeFolderNm, RawDataFolderNm, MatFileNm, "Analysis_Sur")
+    VariableData, HomeFolderNm, RawDataFolderNm, FileName, FileFormat, "Analysis_Sur")
 
 % =========================================================================
 %% < GOFS3.1 Ice product >
@@ -99,14 +103,14 @@ VariableData = {"sst", "sss", "ssu", "ssv", "sic", "sih", "siu", "siv", "surtx",
 timestep = 3; % Analysis default is 3 hours / Reanalysis default is 1 hour
 
 % "Analysis_ice" or "Reanalysis_ice"
-HYC_ver = "Reanalysis_ice";
+HYC_ver = "Analysis_ice";
 
 % Starting time (YY,MM,DD,hh,mm,ss) and Ending time (YY,MM,DD,hh,mm,ss) ===
-Period = [2013, 12, 31, 21, 00, 00 ; 2014, 01, 2, 03, 00, 00];
+Period = [2018, 09, 12, 00, 00, 00 ; 2018, 09, 12, 23, 00, 00];
 
 % [lat start, lat end, lon start, lon end] ================================
 % [S, N, W, E] - unit: -80 to 90 (N), 0 to 360 (E)
-Spatial_area = [34, 35, 124, 125];
+Spatial_area = [27, 29, 124, 125];
 
 % If you want "coarse" resolution, change the step of lon & lat grid. =====
 % Note that, Units of 'lat_step' and 'lon_step' are not "km",
@@ -115,16 +119,20 @@ lat_step = 1; % default is 1 grid step.
 lon_step = 1; % default is 1 grid step.
 
 % you will save data in this file path below.  ============================
-HomeFolderNm = "D:\MATLAB_JU\RawData\";
+HomeFolderNm = "Y:\\HYCOM_NP\\";
 RawDataFolderNm = "HYC_Ice_test";
 
 % mat files will be save with this name below. ============================
 % DO NOT USE UNDERBAR("_") IN "MatFileNm"
 % → e.g) "hyc_hello" → Don't use "_" !!!
-MatFileNm = "HycIce"; % you will save data with this file name
+FileName = "HycIce"; % you will save data with this file name
+
+% File Format 
+%   "mat" or "nc"
+FileFormat = "nc";
 
 HYCOM_GOFS31_Func_Ice_Jiuk(Period, timestep, Spatial_area, lat_step, lon_step, ...
-    VariableData, HomeFolderNm, RawDataFolderNm, MatFileNm, HYC_ver)
+    VariableData, HomeFolderNm, RawDataFolderNm, FileName, FileFormat, HYC_ver)
 
 % =========================================================================
 

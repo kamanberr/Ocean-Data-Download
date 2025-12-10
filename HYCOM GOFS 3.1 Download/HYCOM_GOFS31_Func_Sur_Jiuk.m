@@ -1,9 +1,10 @@
-function HYCOM_GOFS31_Func_Sur_Jiuk(Period, timestep, Spatial_area, lat_step, lon_step, VariableData, HomeFolderNm, RawDataFolderNm, MatFileNm, HYC_ver)
+function HYCOM_GOFS31_Func_Sur_Jiuk(Period, timestep, Spatial_area, lat_step, lon_step, ...
+    VariableData, HomeFolderNm, RawDataFolderNm, FileName, FileFormat, HYC_ver)
 %   Written by Jiuk Hwang
 %   Log
 %       HYCOM_GOFS31_Func_Sur_Jiuk.m
 %       2025.04.20 Draft completed
-%
+%       2025.12.09 now you can download file as NC format
 % -------------------------------------------------------------------------
 % HYCOM GOFS 3.1 Analysis Sur      GLBy0.08/expt_93.0/sur
 %   Period: 2018-09-11 12:00:00 ~ 2024-09-05 09:00:00
@@ -71,10 +72,10 @@ for loophycyr = hycyr'
     % check the existence of FOLDER
     if exist(ckfpath, 'dir')
         clear fn ifn fn2 fndate ifndate id_id_tm;
-        fn = dir(sprintf('%s%s', ckfpath, '*.mat'));
+        fn = dir(sprintf('%s*.%s', ckfpath, FileFormat));
         if height(fn) ~= 0
             for ifn = 1:height(fn)
-                fn2 = split([fn(ifn).name], ["_", ".mat"]);
+                fn2 = split([fn(ifn).name], ["_", sprintf('.%s', FileFormat)]);
                 fprintf('%s already exist \n', [fn(ifn).name])
                 fn3(1) = double(string(fn2{2,:}));
                 fn3(2) = double(string(fn2{3,:}));
@@ -106,10 +107,22 @@ if ~isempty(id_tm)
         if ~exist(fpath, 'dir')
             mkdir(fpath);
         end
-        matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%02.f_%s.mat', MatFileNm, strtime(1), strtime(2), strtime(3), strtime(4), strtime(5), HYC_ver);
-        fpath2 = sprintf('%s%s', fpath, matnm);
-        save(fpath2, "hyc")
-        fprintf('Download %s\n', matnm);
+        if strcmp(FileFormat, 'mat') || strcmp(FileFormat, 'Mat') || strcmp(FileFormat, 'MAT')
+            % Save as Mat file
+            matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.mat', ...
+                FileName, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
+            fpath2 = sprintf('%s%s', fpath, matnm);
+            save(fpath2, "hyc", "-v7.3")
+        end
+
+        if strcmp(FileFormat, 'nc') || strcmp(FileFormat, 'NC') || strcmp(FileFormat, 'Nc')
+            % Save as NC file
+            matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.nc', ...
+                FileName, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
+            coord_priority = ["lon", "lat", "dep"];
+            fpath2 = sprintf('%s%s', fpath, matnm);
+            func_struct2nc_hycom(hyc, fpath2, coord_priority);
+        end
     end
 end
 % =========================================================
