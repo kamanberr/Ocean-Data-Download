@@ -91,15 +91,19 @@ VariableData = {'ssh', 'sal', 'temp', 'u', 'v'};
 timestep = 3;
 
 % you will save data in this file path below.  ============================
-HomeFolderNm = "D:\MATLAB_JU\RawData\";
-RawDataFolderNm = "HYC_ESPC_test6";
+HomeFolderNm = "Y:\\HYCOM_NP\\";
+RawDataFolderNm = "HYC_ESPC_test1";
 
 % mat files will be save with this name below. ============================
 % DO NOT USE UNDERBAR("_") IN "MatFileNm"
 % → e.g) "hyc_hello" → Don't use "_" !!!
-MatFileNm = "hyc"; % you will save data with this file name
+FileName = "hyc"; % you will save data with this file name
+
+% File Format 
+%   "mat" or "nc"
+FileFormat = "nc";
 
 % -------------------------------------------------------------------------
 HYCOM_ESPC_Func_Jiuk_1(Period, timestep, Spatial_area, lat_step, lon_step, ...
-    Depth_range, VariableData, HomeFolderNm, RawDataFolderNm, MatFileNm, 'ESPC')
+    Depth_range, VariableData, HomeFolderNm, RawDataFolderNm, FileName, FileFormat, 'ESPC')
 % -------------------------------------------------------------------------
