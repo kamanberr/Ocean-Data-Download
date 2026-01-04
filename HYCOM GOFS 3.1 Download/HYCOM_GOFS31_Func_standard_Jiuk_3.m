@@ -197,6 +197,8 @@ if strcmp(HYC_ver, 'Analysis')
                             fpath2 = sprintf('%s%s', fpath, matnm);
                             func_struct2nc_hycom(hyc, fpath2, coord_priority);
                         end
+
+                        fprintf('Download %s\n', matnm);
                     end
                 end
                 % =========================================================
