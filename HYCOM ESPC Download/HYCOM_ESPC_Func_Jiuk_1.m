@@ -142,6 +142,7 @@ if ~isempty(id_tm)
                 FileName, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
             fpath2 = sprintf('%s%s', fpath, matnm);
             save(fpath2, "hyc", "-v7.3")
+            fprintf('Download %s\n', matnm);
         end
 
         if strcmp(FileFormat, 'nc') || strcmp(FileFormat, 'NC') || strcmp(FileFormat, 'Nc')
@@ -151,6 +152,7 @@ if ~isempty(id_tm)
             coord_priority = ["lon", "lat", "dep"];
             fpath2 = sprintf('%s%s', fpath, matnm);
             func_struct2nc_hycom(hyc, fpath2, coord_priority);
+            fprintf('Download %s\n', matnm);
         end
     end
 end
