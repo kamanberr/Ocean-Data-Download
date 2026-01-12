@@ -107,10 +107,18 @@ if ~isempty(id_tm)
         if ~exist(fpath, 'dir')
             mkdir(fpath);
         end
+
+        % there is issue: minute is recorded as '59' in some cases
+        if strtime(5) > 30
+            xxx = strtime(4)+1;
+        else
+            xxx = strtime(4);
+        end
+
         if strcmp(FileFormat, 'mat') || strcmp(FileFormat, 'Mat') || strcmp(FileFormat, 'MAT')
             % Save as Mat file
             matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.mat', ...
-                FileName, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
+                FileName, strtime(1), strtime(2), strtime(3), xxx, HYC_ver);
             fpath2 = sprintf('%s%s', fpath, matnm);
             save(fpath2, "hyc", "-v7.3")
             fprintf('Download %s\n', matnm);
@@ -119,7 +127,7 @@ if ~isempty(id_tm)
         if strcmp(FileFormat, 'nc') || strcmp(FileFormat, 'NC') || strcmp(FileFormat, 'Nc')
             % Save as NC file
             matnm = sprintf('%s_%d_%02.f_%02.f_%02.f_%s.nc', ...
-                FileName, strtime(1), strtime(2), strtime(3), strtime(4), HYC_ver);
+                FileName, strtime(1), strtime(2), strtime(3), xxx, HYC_ver);
             coord_priority = ["lon", "lat", "dep"];
             fpath2 = sprintf('%s%s', fpath, matnm);
             func_struct2nc_hycom(hyc, fpath2, coord_priority);
