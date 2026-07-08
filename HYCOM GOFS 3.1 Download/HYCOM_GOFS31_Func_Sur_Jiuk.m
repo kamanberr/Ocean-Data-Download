@@ -5,6 +5,7 @@ function HYCOM_GOFS31_Func_Sur_Jiuk(Period, timestep, Spatial_area, lat_step, lo
 %       HYCOM_GOFS31_Func_Sur_Jiuk.m
 %       2025.04.20 Draft completed
 %       2025.12.09 now you can download file as NC format
+%       2026.07.08 Fixed issue where existing files were re-downloaded on rerun.
 % -------------------------------------------------------------------------
 % HYCOM GOFS 3.1 Analysis Sur      GLBy0.08/expt_93.0/sur
 %   Period: 2018-09-11 12:00:00 ~ 2024-09-05 09:00:00
@@ -77,12 +78,15 @@ for loophycyr = hycyr'
             for ifn = 1:height(fn)
                 fn2 = split([fn(ifn).name], ["_", sprintf('.%s', FileFormat)]);
                 fprintf('%s already exist \n', [fn(ifn).name])
-                fn3(1) = double(string(fn2{2,:}));
-                fn3(2) = double(string(fn2{3,:}));
-                fn3(3) = double(string(fn2{4,:}));
-                fn3(4) = double(string(fn2{5,:}));
-                fn3(5) = double(string(fn2{6,:}));
-                fndate(ifn) = datetime(fn3(1),fn3(2),fn3(3),fn3(4),fn3(5),00, 'Format','uuuu-MM-dd HH:mm');
+
+                % 2026.07.07 Modify ---------------------------
+                fn3(1) = double(string(fn2{2,:})); % uuuu
+                fn3(2) = double(string(fn2{3,:})); % MM
+                fn3(3) = double(string(fn2{4,:})); % dd
+                fn3(4) = double(string(fn2{5,:})); % HH
+                % fn3(5) = double(string(fn2{6,:}));
+                fndate(ifn) = datetime(fn3(1),fn3(2),fn3(3),fn3(4),00,00, 'Format','uuuu-MM-dd HH:mm');
+                % ----------------------------------------------
             end
             for ifndate = 1:length(fndate) % exclude "pre-existing" mat file
                 id_id_tm = timeaxisfromhyc2 == fndate(ifndate);
