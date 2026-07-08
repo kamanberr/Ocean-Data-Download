@@ -5,6 +5,7 @@ function HYCOM_ESPC_Func_Jiuk_1(Period, timestep, Spatial_area, lat_step, lon_st
 %       HYCOM_ESPC_Func_Jiuk_1.m
 %       2025.04.21 Draft completed
 %       2025.12.09 now you can download file as NC format
+%       2026.07.08 Fixed issue where existing files were re-downloaded on rerun.
 % =========================================================================
 
 % make FOLDER for save mat file -------------------------------------------
@@ -102,12 +103,14 @@ for loophycyr = hycyr'
             for ifn = 1:height(fn)
                 fn2 = split([fn(ifn).name], ["_", sprintf('.%s', FileFormat)]);
                 fprintf('%s already exist \n', [fn(ifn).name])
-                fn3(1) = double(string(fn2{2,:}));
-                fn3(2) = double(string(fn2{3,:}));
-                fn3(3) = double(string(fn2{4,:}));
-                fn3(4) = double(string(fn2{5,:}));
-                fn3(5) = double(string(fn2{6,:}));
-                fndate(ifn) = datetime(fn3(1),fn3(2),fn3(3),fn3(4),fn3(5),00, 'Format','uuuu-MM-dd HH:mm');
+                % 2026.07.07 Modify ---------------------------
+                fn3(1) = double(string(fn2{2,:})); % uuuu
+                fn3(2) = double(string(fn2{3,:})); % MM
+                fn3(3) = double(string(fn2{4,:})); % dd
+                fn3(4) = double(string(fn2{5,:})); % HH
+                % fn3(5) = double(string(fn2{6,:}));
+                fndate(ifn) = datetime(fn3(1),fn3(2),fn3(3),fn3(4),00,00, 'Format','uuuu-MM-dd HH:mm');
+                % ----------------------------------------------
             end
             for ifndate = 1:length(fndate) % exclude "pre-existing" mat file
                 id_id_tm = timeaxisfromhyc2 == fndate(ifndate);
