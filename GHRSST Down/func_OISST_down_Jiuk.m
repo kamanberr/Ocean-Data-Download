@@ -1,149 +1,185 @@
-function func_OISST_down_Jiuk(Project_Name, HOME_folder_path, Period, Spatial_area)
+function failed = func_OISST_down_Jiuk(Project_Name, HOME_folder_path, Period, Spatial_area, file_type)
+%FUNC_OISST_DOWN_JIUK  Download subsetted NOAA OISST v2 (daily, 0.25 deg) from NOAA PSL via OPeNDAP.
+%
+%   failed = func_OISST_down_Jiuk(Project_Name, HOME_folder_path, Period, Spatial_area)
+%   failed = func_OISST_down_Jiuk(Project_Name, HOME_folder_path, Period, Spatial_area, file_type)
+%
+%   Project_Name     : folder name under HOME_folder_path
+%   HOME_folder_path : root folder for saving data
+%   Period           : [yyyy mm dd; yyyy mm dd]  (start date; end date)
+%   Spatial_area     : [lat_start, lat_end, lon_start, lon_end]
+%                      lon may be given as -180 to 180 or 0 to 360, e.g.
+%                      [118 128] East Asia, [-10 10] crossing 0E, [-180 180] global.
+%                      Saved lon is 0 to 360 (as in OISST), except for domains
+%                      crossing 0E, which are saved as -180 to 180.
+%   file_type        : 'mat' (default) | 'nc'
+%   failed           : dates that could not be downloaded (run again to retry)
+%
+%   One file per day is saved as
+%       HOME_folder_path/Project_Name/yyyy/OISST_v2_yyyy_MM_dd.mat   (struct "oisst": time, lon, lat, sst)
+%       HOME_folder_path/Project_Name/yyyy/OISST_v2_yyyy_MM_dd.nc    (variables: time, lon, lat, sst)
+%   Files that already exist are skipped.
+%
 %   written by Jiuk Hwang
 %   LOG
 %       [2024.10.03] Draft done.
-%       [2024.10.05] modify - only dowload OISST
+%       [2024.10.05] modify - only download OISST
+%       [2026.10.28] One subset request per chunk of days, portable paths, retry limit.
+%       [2026.10.29] Output file type: 'mat' or 'nc'.
+%                    Global and 0E-crossing longitude ranges supported.
 
-% Store data in different folders by year
-for idprd0 = Period(1,1):Period(2,1)    % Loop for sequence of "year"
+if nargin < 5 || isempty(file_type), file_type = 'mat'; end
+file_type = validatestring(file_type, {'mat', 'nc'});
 
-    fprintf('Preparing Download for %d...\n', idprd0)
-    disp('Please Wait...')
+base_url  = "http://psl.noaa.gov/thredds/dodsC/Datasets/noaa.oisst.v2.highres/sst.day.mean.%d.nc";
+chunk     = 31;     % days per request (limits memory use for large domains)
+max_retry = 10;
+wait_s    = 15;
 
-    link1 = sprintf("http://psl.noaa.gov/thredds/dodsC/Datasets/" + ...
-        "noaa.oisst.v2.highres/sst.day.mean.%d.nc", idprd0);
-    link2 = "?time,lat,lon";
-    linkfull1 = sprintf('%s%s', link1, link2);
+d = datetime(Period);
+assert(numel(d) == 2 && d(1) <= d(2), ...
+    'Period must be [start; end] with the start date on or before the end date.');
 
-    imsi_time = downloadretry(linkfull1, "time");
-    % units        = 'days since 1800-01-01 00:00:00'
-    imsi_time2 = datetime(1800, 01, 01, 00, 00, 00) + days(imsi_time);
-    imsi_lon = downloadretry(linkfull1, "lon");
-    imsi_lat = downloadretry(linkfull1, "lat");
-    disp('Ready to Download...')
+failed = datetime.empty(0, 1);
 
-    if Period(1,1)==Period(2,1)     % if the year is same between "start date" and "end date"
-        Period2(1) = datetime(idprd0, Period(1,2), Period(1,3));
-        Period2(2) = datetime(idprd0, Period(2,2), Period(2,3));
-    else    % if the year is different between "start date" and "end date"
-        if idprd0 == Period(1,1)    % first year
-            Period2(1) = datetime(idprd0, Period(1,2), Period(1,3));
-            Period2(2) = datetime(idprd0, 12, 31);
-        elseif idprd0 == Period(2,1)    % end year
-            Period2(1) = datetime(idprd0, 1, 1);
-            Period2(2) = datetime(idprd0, Period(2,2), Period(2,3));
-        else
-            Period2(1) = datetime(idprd0, 1, 1);
-            Period2(2) = datetime(idprd0, 12, 31);
-        end
+for yr = year(d(1)):year(d(2))
+    want  = (max(d(1), datetime(yr, 1, 1)):caldays(1):min(d(2), datetime(yr, 12, 31)))';
+    fpath = fullfile(HOME_folder_path, Project_Name, num2str(yr));
+    if ~exist(fpath, 'dir'), mkdir(fpath); end
+
+    fnames = "OISST_v2_" + string(want, 'yyyy_MM_dd') + "." + file_type;
+    done   = isfile(fullfile(fpath, fnames));
+    if all(done)
+        fprintf('%d: all files already exist.\n', yr);
+        continue
     end
+    want = want(~done);  fnames = fnames(~done);
 
-    % ===========================================
-    timeaxisfromhyc = imsi_time2;
-    inputtime = (Period2(1):days(1):Period2(2))';
-    id_tm = nan(length(inputtime),1);
-    for looptime = 1:length(inputtime)
-        ck = find(timeaxisfromhyc == inputtime(looptime));
-        if ~isempty(ck)
-            if length(ck) > 1 % 2018-06-21 06:00:00 ← duplicated in "timeaxisfromhyc"
-                id_tm(looptime) = ck(1);
-            else
-                id_tm(looptime) = ck;
-            end
-        else
-            fprintf('Cannot find the data for %s in THIS Year. \n', string(inputtime(looptime)))
+    try
+        url = sprintf(base_url, yr);
+        fprintf('Preparing download for %d...\n', yr);
+        tnum = double(retry(@() ncread(url, 'time'), max_retry, wait_s));   % days since 1800-01-01
+        tm   = datetime(1800, 1, 1) + days(tnum);
+        lat  = double(retry(@() ncread(url, 'lat'), max_retry, wait_s));
+        lon  = double(retry(@() ncread(url, 'lon'), max_retry, wait_s));
+
+        ilat = sort([findnearpoint(lat, Spatial_area(1)), findnearpoint(lat, Spatial_area(2))]);
+        nlat = diff(ilat) + 1;
+        lat_sub = lat(ilat(1):ilat(2));
+        [segs, lon_sub] = lon_segments(lon, Spatial_area(3:4));
+
+        % match requested days to the time axis (first match if duplicated)
+        [tf, it] = ismember(dateshift(want, 'start', 'day'), dateshift(tm, 'start', 'day'));
+        if any(~tf)
+            fprintf('No data on the server for: %s\n', strjoin(string(want(~tf), 'yyyy-MM-dd'), ', '));
+            failed = [failed; want(~tf)]; %#ok<AGROW>
         end
-    end
-    id_tm = rmmissing(id_tm);
-    Period3 = timeaxisfromhyc(id_tm);
+        want = want(tf);  it = it(tf);  fnames = fnames(tf);
 
-    % ===========================================
-    % download folder
-    fpath = sprintf('%s\\%s\\%d',HOME_folder_path,Project_Name,idprd0);
-
-    % check the existence of "download folder"
-    if ~exist(fpath, 'dir')     % if there is no folder
-        mkdir(fpath);   % make new folder
-        for idprd = Period3'      % download daily data
-            downdown(imsi_time2, idprd, imsi_lat, imsi_lon, Spatial_area, ...
-                link1, fpath);
-        end
-    else    % if folder already exists
-        fprintf('%d Folder already exists.\n', idprd0)
-        % get the information about data already saved
-        fn = dir(sprintf('%s\\%s', fpath, '*.mat'));
-        if height(fn) == 0      % if there is no data already saved
-            for idprd = Period3'  % download daily data
-                downdown(imsi_time2, idprd, imsi_lat, imsi_lon, Spatial_area, ...
-                    link1, fpath);
+        for c = 1:chunk:numel(it)
+            idx = c:min(c + chunk - 1, numel(it));
+            i0  = it(idx(1));  i1 = it(idx(end));
+            % sst in MATLAB order: lon x lat x time (subset on the server side)
+            blk = [];
+            for s = 1:numel(segs)
+                st = segs{s};  nlon = st(2) - st(1) + 1;
+                blk = [blk; retry(@() ncread(url, 'sst', [st(1) ilat(1) i0], [nlon nlat i1 - i0 + 1]), ...
+                    max_retry, wait_s)]; %#ok<AGROW>
             end
-        else    % if there is some of data already saved.
-            % get the information about the name of mat file already saved
-            for ifn = 1:height(fn)
-                fn2(ifn, :) = split([fn(ifn).name], ["_",".mat"]);
-                fprintf('%s already exist \n', [fn(ifn).name])
-            end
-            check_exist = datetime(zeros(height(fn2), 1)+idprd0, ...
-                str2double(fn2(:,end-2)), str2double(fn2(:,end-1)));
 
-            % download daily data except mat file already exist.
-            for idprd = Period3'
-                if ~ismember(idprd, check_exist)
-                    downdown(imsi_time2, idprd, imsi_lat, imsi_lon, Spatial_area, ...
-                        link1, fpath);
+            for k = idx
+                sst = double(blk(:, :, it(k) - i0 + 1));
+                sst(sst < -1e30) = NaN;     % missing value (-9.96921e+36)
+                fname = fullfile(fpath, fnames(k));
+                switch file_type
+                    case 'mat'
+                        oisst = struct('time', tm(it(k)), 'lon', lon_sub, 'lat', lat_sub, 'sst', sst);
+                        save(fname, 'oisst');
+                    case 'nc'
+                        write_nc(fname, tnum(it(k)), lon_sub, lat_sub, sst);
                 end
+                fprintf('Download complete for %s\n', fnames(k));
             end
         end
+    catch ME
+        fprintf('Year %d failed: %s\n', yr, ME.message);
+        failed = [failed; want]; %#ok<AGROW>
     end
-    clear fn fn2 check_exist ifn iprd
+end
+
+failed = unique(failed);
+if isempty(failed)
+    disp('All requested dates were downloaded.');
+else
+    fprintf('%d date(s) failed. Run the function again to retry them.\n', numel(failed));
+end
 end
 
 % =========================================================================
-    function downdown(imsi_time2, idprd, imsi_lat, imsi_lon, Spatial_area, ...
-            link1, fpath)
-        idtime = find(imsi_time2 == idprd);
-        idlat(1) = findnearpoint(imsi_lat, Spatial_area(1));
-        idlat(2) = findnearpoint(imsi_lat, Spatial_area(2));
-        idlon(1) = findnearpoint(imsi_lon, Spatial_area(3));
-        idlon(2) = findnearpoint(imsi_lon, Spatial_area(4));
+function [segs, lon_sub] = lon_segments(lon, lon_in)
+% Index range(s) of the dataset longitude (0 to 360) covering lon_in.
+% segs : {[i_start i_end]} or two ranges for a domain crossing 0E.
+lon_in = sort(lon_in);
+if diff(lon_in) >= 360 - 1e-6                       % whole globe
+    segs    = {[1 numel(lon)]};
+    lon_sub = lon;
+    return
+end
+lon_req = mod(lon_in, 360);
+i1 = findnearpoint(lon, lon_req(1));
+i2 = findnearpoint(lon, lon_req(2));
+if i1 <= i2
+    segs    = {[i1 i2]};
+    lon_sub = lon(i1:i2);
+else                                                % crosses 0E
+    segs    = {[i1 numel(lon)], [1 i2]};
+    lon_sub = [lon(i1:end) - 360; lon(1:i2)];       % saved as -180 to 180
+end
+end
 
-        % sst : TIME, LAT, LON
-        linkfull2 = sprintf("%s?time[%d:1:%d],lat[%d:1:%d],lon[%d:1:%d],sst[%d:1:%d][%d:1:%d][%d:1:%d]", ...
-            link1, idtime-1, idtime-1, idlat(1)-1, idlat(2)-1, idlon(1)-1, idlon(2)-1, ...
-            idtime-1, idtime-1, idlat(1)-1, idlat(2)-1, idlon(1)-1, idlon(2)-1);
-        % the number in linkfull is start with 0(zero).
-        % So each of number in linkfull should be "ID - 1".
+function write_nc(fname, tnum, lon, lat, sst)
+% Write one day of subsetted OISST as a NetCDF-4 file (dimensions: time, lat, lon).
+if isfile(fname), delete(fname); end
+nccreate(fname, 'time', 'Dimensions', {'time', 1},          'Datatype', 'double', 'Format', 'netcdf4');
+nccreate(fname, 'lat',  'Dimensions', {'lat', numel(lat)},  'Datatype', 'double');
+nccreate(fname, 'lon',  'Dimensions', {'lon', numel(lon)},  'Datatype', 'double');
+nccreate(fname, 'sst',  'Dimensions', {'lon', numel(lon), 'lat', numel(lat), 'time', 1}, ...
+    'Datatype', 'single', 'FillValue', NaN, 'DeflateLevel', 4);
 
-        time = downloadretry(linkfull2, "time");
-        oisst = struct;
-        oisst.time = datetime(1800, 01, 01, 00, 00, 00) + days(time);
-        oisst.lon = double(downloadretry(linkfull2, "lon"));
-        oisst.lat = double(downloadretry(linkfull2, "lat"));
-        oisst.sst = double(downloadretry(linkfull2, "sst"));
-        oisst.sst(oisst.sst == -9.969209968386869e+36) = NaN;
-        strtime = datevec(oisst.time);
-        matname = sprintf("%s_%d_%02.f_%02.f.mat", 'OISST_v2', strtime(1), strtime(2), strtime(3));
-        save(sprintf('%s\\%s',fpath, matname), "oisst");
-        fprintf('Download complete for %s\n', matname);
+ncwrite(fname, 'time', tnum);
+ncwrite(fname, 'lat',  lat);
+ncwrite(fname, 'lon',  lon);
+ncwrite(fname, 'sst',  single(sst));
+
+ncwriteatt(fname, 'time', 'units',     'days since 1800-01-01 00:00:00');
+ncwriteatt(fname, 'time', 'long_name', 'Time');
+ncwriteatt(fname, 'lat',  'units',     'degrees_north');
+ncwriteatt(fname, 'lat',  'long_name', 'Latitude');
+ncwriteatt(fname, 'lon',  'units',     'degrees_east');
+ncwriteatt(fname, 'lon',  'long_name', 'Longitude');
+ncwriteatt(fname, 'sst',  'units',     'degC');
+ncwriteatt(fname, 'sst',  'long_name', 'Daily Sea Surface Temperature');
+ncwriteatt(fname, '/',    'title',     'NOAA OI SST V2 High Resolution (daily mean), spatial subset');
+ncwriteatt(fname, '/',    'source',    'https://psl.noaa.gov/data/gridded/data.noaa.oisst.v2.highres.html');
+ncwriteatt(fname, '/',    'history',   ['Subset downloaded with func_OISST_down_Jiuk.m on ' char(datetime('now'))]);
+end
+
+function out = retry(fun, max_retry, wait_s)
+% Retry automatically if the download is interrupted, up to max_retry times.
+for k = 1:max_retry
+    try
+        out = fun();
+        return
+    catch ME
+        fprintf('  [%d/%d] %s\n', k, max_retry, ME.message);
+        if k == max_retry, rethrow(ME); end
+        disp('  Retrying... Please wait.');
+        pause(wait_s);
     end
+end
+end
 
-    function output = downloadretry(adress, var)
-        while true % If the downloading process is interrupted, then retry downloading automatically.
-            try
-                output = ncread(adress, var);
-                break; % Exit the while statement if it runs without errors
-            catch ME %Get information about errors that occur inside the try block into the object ME
-                % Outputting error messages
-                disp('Error Message : ');        disp(ME.message);
-            end
-            % Wait and run again
-            disp('Process Retry... Please wait');    pause(15);
-        end
-    end
-
-    function id = findnearpoint(base, target)
-        % find nearest point of "target" from "base"
-        [~, id] = min(abs(base-target));
-    end
-
+function id = findnearpoint(base, target)
+% find nearest point of "target" from "base"
+[~, id] = min(abs(base - target));
 end

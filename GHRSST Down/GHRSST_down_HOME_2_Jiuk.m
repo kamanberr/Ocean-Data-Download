@@ -1,109 +1,109 @@
-%% GHRSST Download 
+%% SST Download (OISST from NOAA PSL, GHRSST L4 from PO.DAAC)
 %   written by Jiuk Hwang
 %   LOG
 %       [2024.10.03] Draft done.
-%       [2024.10.05] Modify url adress.
+%       [2024.10.05] Modify url address.
 %       [2025.02.21] Add description.
+%       [2026.10.28] Token-based download, missing-date check integrated.
+%       [2026.10.29] 11 GHRSST L4 datasets from PO.DAAC. OISST output: mat or nc.
 %
-% < How to use this code? >
-%   1. Set the small area and just one day to prepare.
-%   2. After running the code, you see the white internet window with "Login."
-%   3. You should "Log in" for "NASA Earthdata (https://www.earthdata.nasa.gov/)" for the first time. 
-%   4. After "Log in", you set the area and period you want. And just run!
-% 
-% Target data : OSITA v2, OSTIA Reprocessed, MUR 4.1, MUR 4.2 and OISST v2
-% 
-%   - You can set the Area and Period of SST data.
-%   - The sources of OSTIA and MUR are PO.DAAC Homepage.
-%   - The source of OISST is psl.noaa
-%   - OSTIA v2 in PO.DAAC and OSTIA Analysis in CMEMS seem to same dataset.
-%   - The PDF file "Manual for download data from PODAAC using MATLAB (with specific Area and Period)" 
-%       is the way that how I wrote the MATLAB script for downloading data from PODAAC. 
-%       If you want more data from PODAAC, you could write a new MATLAB script using the manual.
+% < How to use >
+%   OISST  : set the area and period, and run the OISST section.
+%   PO.DAAC: 1. Earthdata token setup (section below, once per MATLAB session)
+%            2. choose the dataset by its input name (list below)
+%            3. set the area and period, and run.
+%            The lon/lat grid of each dataset is downloaded automatically on the first run.
 %
-%% OSTIA & MUR 
+%   Units : OISST "sst" in degrees Celsius, GHRSST "analysed_sst" in Kelvin.
+%   OISST accepts any longitude range (e.g. [-180 180] global). GHRSST domains crossing the dateline are not supported.
 %
-% [1] OSTIA GDS2 (OSTIA Analysis in CMEMS)  | OSTIA-UKMO-L4-GLOB-v2.0
-%   Link : https://podaac.jpl.nasa.gov/dataset/OSTIA-UKMO-L4-GLOB-v2.0
-%   Spatial     Resolution  : 0.05° 
-%   Temporal    Resolution  : Daily
-%   Available   Period      : 2007-Jan-01 to Present
-%--------------------------------------------------------------------------
-% [2] OSTIA Reprocessed                     | OSTIA-UKMO-L4-GLOB-REP-v2.0
-%   Link : https://podaac.jpl.nasa.gov/dataset/OSTIA-UKMO-L4-GLOB-REP-v2.0
-%   Spatial     Resolution  : 0.05° 
-%   Temporal    Resolution  : Daily
-%   Available   Period      : 1982-Jan-01 to 2024-Jan-01
-%--------------------------------------------------------------------------
-% [3] MUR SST Analysis 4.1                  | MUR-JPL-L4-GLOB-v4.1
-%   Link : https://podaac.jpl.nasa.gov/dataset/MUR-JPL-L4-GLOB-v4.1
-%   Spatial     Resolution  : 0.01° 
-%   Temporal    Resolution  : Daily
-%   Available   Period      : 2002-Jun-01 to present
-%--------------------------------------------------------------------------
-% [4] MUR SST Analysis 4.2                  | MUR25-JPL-L4-GLOB-v04.2
-%   Link : https://podaac.jpl.nasa.gov/dataset/MUR25-JPL-L4-GLOB-v04.2
-%   Spatial     Resolution  : 0.25° 
-%   Temporal    Resolution  : Daily
-%   Available   Period      : 2002-Sep-01 to Present
-%--------------------------------------------------------------------------
+% =========================================================================
+%% [1] OISST v2 (NOAA PSL)
+%   NOAA OI SST V2 High Resolution | sst.day.mean | 1981-Sep-01 to present | 0.25 deg
+%   https://psl.noaa.gov/data/gridded/data.noaa.oisst.v2.highres.html
 clc; clear;
 
-% OSITA v2 / OSTIA rep / MUR 4.1 / MUR 4.2
-source = 'OSTIA rep';
+Project_Name     = "OISST";                       % folder name
+HOME_folder_path = fullfile(pwd, "Raw Data");     % root folder for saving data
 
-period = [1982, 1, 1; 2023, 12, 31];
-Spatial_area = [22 54, 118, 144]; % Adjacent shelf sea around the Korean Peninsula
+period       = [2018, 8, 1; 2018, 8, 2];     % [start y,m,d ; end y,m,d]
+Spatial_area = [-90, 90, -180, 180];            % [lat start, lat end, lon start, lon end] (lon: -180 to 180 or 0 to 360)
+file_type    = 'nc';                          % output file type: 'mat' | 'nc'
 
-% If the downloaded file has the SAME NAME, INCREASE the value of lag_time
-lag_time = 3; % seconds between download each files
-
-func_podaac_down_Jiuk(source, period, Spatial_area, lag_time)
-
-%% Extract Missing date during download process + Retry running
-%   [2024.10.07] Written by Yunji Noh
-%   This section is for the case of "OSTIA v2". 
-%   It may need additional modification for other sources.
-
-dateRange = datetime(period(1,:)):datetime(period(2,:));
-% change folder path with your PC environment -----------------------------
-files = dir('C:\Users\User\Downloads\*.nc4');
-% -------------------------------------------------------------------------
-fileDates = [];
-for i = 1:length(files)
-    fileName = files(i).name;
-    fileDateStr = fileName(1:8);
-    fileDate = datetime(fileDateStr, 'InputFormat', 'yyyyMMdd');
-    fileDates = [fileDates; fileDate];
-end
-missingDates = setdiff(dateRange, fileDates);
-
-for i=1:length(missingDates)
-    date=datevec(missingDates(i));
-    period_missing=[date(:,1:3); date(:,1:3)];
-    func_podaac_down_Jiuk(source, period_missing, Spatial_area, lag_time)
-end
+failed = func_OISST_down_Jiuk(Project_Name, HOME_folder_path, period, Spatial_area, file_type);
+if ~isempty(failed), disp(failed); end
 
 % =========================================================================
-%% OISST v2
-%   Spatial     Resolution  : 0.25° 
-%   Temporal    Resolution  : Daily
-%   Available   Period      : 1981-09       ~ present
+%% [2] GHRSST L4 (PO.DAAC)  -  dataset list
+%   input name : full name | short name | period | grid | link
+%
+%   'ostia'      : GHRSST Level 4 OSTIA Global Foundation Sea Surface Temperature Analysis
+%                  OSTIA-UKMO-L4-GLOB-v2.0 | 2006-Dec-31 to present | 0.05 deg
+%                  https://podaac.jpl.nasa.gov/dataset/OSTIA-UKMO-L4-GLOB-v2.0
+%   'ostia_rep'  : GHRSST Level 4 OSTIA Global Historical Reprocessed Foundation Sea Surface Temperature Analysis
+%                  OSTIA-UKMO-L4-GLOB-REP-v2.0 | 1982-Jan-01 to 2023-Dec-31 | 0.05 deg
+%                  https://podaac.jpl.nasa.gov/dataset/OSTIA-UKMO-L4-GLOB-REP-v2.0
+%   'mur'        : GHRSST Level 4 MUR Global Foundation Sea Surface Temperature Analysis (v4.1)
+%                  MUR-JPL-L4-GLOB-v4.1 | 2002-May-31 to present | 0.01 deg
+%                  https://podaac.jpl.nasa.gov/dataset/MUR-JPL-L4-GLOB-v4.1
+%   'mur25'      : GHRSST Level 4 MUR 0.25deg Global Foundation Sea Surface Temperature Analysis (v4.2)
+%                  MUR25-JPL-L4-GLOB-v04.2 | 2002-Aug-31 to present | 0.25 deg
+%                  https://podaac.jpl.nasa.gov/dataset/MUR25-JPL-L4-GLOB-v04.2
+%   'gamssa'     : GHRSST Level 4 GAMSSA_28km Global Foundation Sea Surface Temperature Analysis v1.0 (GDS2)
+%                  GAMSSA_28km-ABOM-L4-GLOB-v01 | 2008-Jul-23 to present | 0.25 deg
+%                  https://podaac.jpl.nasa.gov/dataset/GAMSSA_28km-ABOM-L4-GLOB-v01
+%   'dmi'        : GHRSST Level 4 DMI_OI Global Foundation Sea Surface Temperature Analysis (GDS version 2)
+%                  DMI_OI-DMI-L4-GLOB-v1.0 | 2013-Apr-30 to present | 0.05 deg
+%                  https://podaac.jpl.nasa.gov/dataset/DMI_OI-DMI-L4-GLOB-v1.0
+%   'ospo'       : GHRSST Level 4 OSPO Global Foundation Sea Surface Temperature Analysis (GDS version 2)
+%                  Geo_Polar_Blended-OSPO-L4-GLOB-v1.0 | 2014-Jun-02 to present | 0.054 deg
+%                  https://podaac.jpl.nasa.gov/dataset/Geo_Polar_Blended-OSPO-L4-GLOB-v1.0
+%   'ospo_night' : GHRSST Level 4 OSPO Global Nighttime Foundation Sea Surface Temperature Analysis (GDS version 2)
+%                  Geo_Polar_Blended_Night-OSPO-L4-GLOB-v1.0 | 2014-Jun-02 to present | 0.054 deg
+%                  https://podaac.jpl.nasa.gov/dataset/Geo_Polar_Blended_Night-OSPO-L4-GLOB-v1.0
+%   'k10'        : GHRSST Level 4 K10_SST Global 10 km Analyzed Sea Surface Temperature from NAVO in GDS2.0
+%                  K10_SST-NAVO-L4-GLOB-v01 | 2019-Jan-09 to present | 0.1 deg
+%                  https://podaac.jpl.nasa.gov/dataset/K10_SST-NAVO-L4-GLOB-v01
+%   'mw_ir_oi'   : GHRSST Level 4 MW_IR_OI Global Foundation Sea Surface Temperature analysis version 5.1 from REMSS
+%                  MW_IR_OI-REMSS-L4-GLOB-v5.1 | 2002-Jun-01 to present | 0.09 deg
+%                  https://podaac.jpl.nasa.gov/dataset/MW_IR_OI-REMSS-L4-GLOB-v5.1
+%   'mw_oi'      : GHRSST Level 4 MW_OI Global Foundation Sea Surface Temperature analysis version 5.1 from REMSS
+%                  MW_OI-REMSS-L4-GLOB-v5.1 | 1997-Dec-31 to present | 0.25 deg
+%                  https://podaac.jpl.nasa.gov/dataset/MW_OI-REMSS-L4-GLOB-v5.1
+%
+%   Variables (vars) : 'analysed_sst' (default), 'analysis_error', 'sea_ice_fraction', 'mask'
+%                      mur, mur25 only: 'sst_anomaly' (mur only: 'dt_1km_data')
+%
+%% [2-1] Earthdata token setup (once per MATLAB session)
+%  [Step 1] Create a NASA Earthdata account: https://urs.earthdata.nasa.gov/users/new
+%  [Step 2] Log in at https://urs.earthdata.nasa.gov/
+%  [Step 3] Click the "Generate Token" tab, then press "Generate Token".
+%  [Step 4] Copy the long string that appears (usually starts with "eyJ...").
+%  [Step 5] Paste it between the quotation marks below, remove the leading "%", and run this section.
+%
+% setenv('EARTHDATA_TOKEN', 'paste-your-token-here');
+%
+%  NOTES : the token lasts only for the current MATLAB session (repeat Step 5 after restarting MATLAB),
+%          expires after about 60 days (go back to Step 3 if "Authentication failed" appears),
+%          and must be removed from this script before sharing it.
+if isempty(getenv('EARTHDATA_TOKEN'))
+    warning('EARTHDATA_TOKEN is not set. Complete Steps 1 to 5 above.');
+else
+    disp('Token is set.');
+end
 
-clc; clear; 
+%% [2-2] GHRSST L4 download
+clc; clear;
 
-% Write the Project Name (for the Folder name and Mat file name)
-Project_Name = "OISST";
+source = 'ostia';                             % input name from the list above
+period       = [2018, 8, 1; 2018, 8, 31];     % [start y,m,d ; end y,m,d]
+Spatial_area = [22, 54, 118, 144];            % [lat start, lat end, lon start, lon end] (lon: -180 to 180)
+vars         = {'analysed_sst'};              % variables to download
+out_dir      = fullfile(pwd, 'GHRSST', source);
 
-% Write the FilePath that you want to save data
-HOME_folder_path = "C:\Users\MATLAB\DATA_download\GHRSST_down";
+failed = func_podaac_down_Jiuk(source, period, Spatial_area, out_dir, vars);
+if ~isempty(failed), disp(failed); end     % run this section again to retry failed dates
 
-% Set the Period : [Start year, Start month ; End year, End month]
-%   OISST v2  : 1981-09       ~ present
-Period = [2014, 1, 1; 2014, 1, 5];
-
-% Set tha Area
-% [lat start, lat end, lon start, lon end]
-Spatial_area = [24, 35, 121, 132];
-
-func_OISST_down_Jiuk(Project_Name, HOME_folder_path, Period, Spatial_area)
+% Browser method (no token): out_dir must be the browser download folder.
+% out_dir = fullfile(getenv('USERPROFILE'), 'Downloads');
+% failed  = func_podaac_down_Jiuk(source, period, Spatial_area, out_dir, vars, 'browser', 3);
