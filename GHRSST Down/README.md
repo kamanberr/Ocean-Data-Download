@@ -8,8 +8,7 @@ MATLAB scripts that download daily sea surface temperature (SST) for a user-defi
 - NOAA OISST v2 High Resolution from [NOAA PSL](https://psl.noaa.gov/data/gridded/data.noaa.oisst.v2.highres.html)
 
 
-
-![Alt text](https://github.com/kamanberr/Ocean-Data-Download/blob/main/GHRSST%20Down/GHRSST_EastAsiaMarginalSea.png) 
+![Alt text](https://github.com/kamanberr/Ocean-Data-Download/blob/main/GHRSST%20Down/GHRSST_EastAsiaMarginalSea%20v2.png) 
 
 ## Files
 
